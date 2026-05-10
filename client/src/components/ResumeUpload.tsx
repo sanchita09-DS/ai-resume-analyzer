@@ -23,6 +23,7 @@ export function ResumeUpload({ onUploadSuccess }: ResumeUploadProps) {
       }
     },
     onError: (error) => {
+      console.error("Upload error:", error);
       toast.error(error.message || "Failed to upload resume");
       setUploading(false);
     },
@@ -79,15 +80,42 @@ export function ResumeUpload({ onUploadSuccess }: ResumeUploadProps) {
     const reader = new FileReader();
 
     reader.onload = (e) => {
-      const buffer = e.target?.result as ArrayBuffer;
-      const base64 = Buffer.from(buffer).toString("base64");
-      const fileType = file.type.includes("pdf") ? "pdf" : "docx";
+      try {
+        const buffer = e.target?.result as ArrayBuffer;
+        
+        // Convert ArrayBuffer to base64 using browser API (not Node.js Buffer)
+        const bytes = new Uint8Array(buffer);
+        let binaryString = "";
+        for (let i = 0; i < bytes.byteLength; i++) {
+          binaryString += String.fromCharCode(bytes[i]);
+        }
+        const base64String = btoa(binaryString);
+        
+        const fileType = file.type.includes("pdf") ? "pdf" : "docx";
 
-      uploadMutation.mutate({
-        fileName: file.name,
-        fileBuffer: base64,
-        fileType,
-      });
+        console.log("Uploading file:", {
+          fileName: file.name,
+          fileType,
+          size: file.size,
+          base64Length: base64String.length,
+        });
+
+        uploadMutation.mutate({
+          fileName: file.name,
+          fileBuffer: base64String,
+          fileType,
+        });
+      } catch (error) {
+        console.error("Error encoding file:", error);
+        toast.error("Failed to encode file");
+        setUploading(false);
+      }
+    };
+
+    reader.onerror = () => {
+      console.error("FileReader error");
+      toast.error("Failed to read file");
+      setUploading(false);
     };
 
     reader.readAsArrayBuffer(file);

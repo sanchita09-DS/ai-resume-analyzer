@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { CyberpunkDashboard } from "@/components/CyberpunkDashboard";
 import { ResumeUpload } from "@/components/ResumeUpload";
 import { ResumeHistory } from "@/components/ResumeHistory";
@@ -31,7 +31,7 @@ export default function Dashboard() {
           <ResumeUpload
             onUploadSuccess={(resumeId) => {
               setSelectedResumeId(resumeId);
-              setCurrentPage("dashboard");
+              setCurrentPage("history");
             }}
           />
         );

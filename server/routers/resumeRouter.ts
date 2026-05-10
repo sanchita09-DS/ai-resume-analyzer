@@ -34,11 +34,16 @@ export const resumeRouter = router({
     .mutation(async ({ ctx, input }) => {
       try {
         // Decode base64 file
+        console.log("[Resume Upload] Starting upload for:", input.fileName, "Type:", input.fileType);
         const buffer = Buffer.from(input.fileBuffer, "base64");
+        console.log("[Resume Upload] Buffer decoded, size:", buffer.length);
 
         // Extract text from file
+        console.log("[Resume Upload] Extracting text from", input.fileType);
         const extractedText = await extractResumeText(buffer, input.fileType);
+        console.log("[Resume Upload] Text extracted, length:", extractedText.length);
         const normalizedText = normalizeText(extractedText);
+        console.log("[Resume Upload] Text normalized, length:", normalizedText.length);
 
         // Extract skills and job roles
         const skills = extractSkills(normalizedText);
@@ -146,10 +151,12 @@ Keep each feedback concise (2-3 sentences) and actionable.`;
           },
         };
       } catch (error) {
-        console.error("Resume upload error:", error);
+        console.error("[Resume Upload] Error:", error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error("[Resume Upload] Error details:", errorMessage);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: error instanceof Error ? error.message : "Failed to upload resume",
+          message: errorMessage,
         });
       }
     }),

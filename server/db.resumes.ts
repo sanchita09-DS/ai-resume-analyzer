@@ -15,7 +15,16 @@ export async function createResume(data: InsertResume): Promise<Resume | null> {
 
   try {
     const result = await db.insert(resumes).values(data);
-    const insertedId = (result as any).insertId;
+    
+    // For MySQL with Drizzle, result is an array-like object with insertId
+    const insertedId = (result as any)[0]?.insertId || (result as any).insertId;
+    
+    if (!insertedId) {
+      console.error("Failed to get inserted ID from result:", result);
+      throw new Error("Failed to get inserted resume ID");
+    }
+    
+    console.log("Resume created with ID:", insertedId);
     return getResumeById(insertedId);
   } catch (error) {
     console.error("Failed to create resume:", error);
