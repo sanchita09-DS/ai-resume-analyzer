@@ -1,148 +1,206 @@
-# AI Resume Analyzer - Project TODO
+# AI Resume Analyzer - ML Model Integration TODO
 
-## Core Features
+## Project Requirement Change
+- ❌ OLD: Use Manus LLM API (not allowed for project expo)
+- ✅ NEW: Use trained ML models with datasets (required for project expo)
 
-### Phase 1: Architecture & Design
-- [x] Define cyberpunk color palette and CSS variables
-- [x] Create HUD-style component system (corner brackets, glow effects)
-- [x] Design responsive layout structure
+## Phase 1: ML Model Planning & Strategy
 
-### Phase 2: Database & Storage
-- [x] Create resumes table with file storage references
-- [x] Create analyses table for scores and feedback
-- [x] Create chat_history table for conversations
-- [x] Set up S3 storage integration
-- [x] Test file upload and retrieval (database migration applied)
+### ML Models to Train
+- [ ] **Model 1: Skill Extractor (NER)** - Extract skills from resume text
+- [ ] **Model 2: Resume Feedback Generator** - Generate improvement suggestions
+- [ ] **Model 3: Chatbot Intent Classifier** - Classify user questions and generate responses
+- [ ] **Model 4: Section Classifier** - Classify resume sections (Summary, Experience, etc.)
 
-### Phase 3: Backend APIs & AI Integration
-- [x] Build resume upload endpoint with PDF/DOCX parsing
-- [x] Implement ATS compatibility scoring algorithm
-- [x] Implement readability scoring algorithm
-- [x] Implement keyword density analysis
-- [x] Build skill gap analyzer endpoint
-- [x] Integrate LLM for resume analysis feedback
-- [x] Create chatbot endpoint with resume context injection
-- [x] Build cover letter generation endpoint
-- [x] Build LinkedIn optimization endpoint
-- [x] Create report generation endpoint
-- [x] Write and pass backend tests
+### Dataset Creation
+- [ ] Create labeled dataset for skill extraction (100+ samples)
+- [ ] Create labeled dataset for resume feedback (100+ samples)
+- [ ] Create Q&A dataset for chatbot (50+ Q&A pairs)
+- [ ] Create labeled dataset for section classification (100+ samples)
 
-### Phase 4: Frontend - Dashboard & Upload
-- [x] Build cyberpunk dashboard layout with sidebar
-- [x] Create resume upload component with drag-and-drop
-- [x] Implement file validation (PDF/DOCX only)
-- [x] Build animated score cards display
-- [x] Create progress bars with neon styling
-- [x] Implement loading states with cyberpunk animations
+### Model Architecture Decisions
+- [ ] Skill Extractor: spaCy NER or sklearn-based
+- [ ] Feedback Generator: Rule-based + ML classification
+- [ ] Chatbot: Intent classification + template responses
+- [ ] Section Classifier: sklearn text classification
 
-### Phase 5: Frontend - Resume Analysis & Feedback
-- [x] Display ATS score with visual feedback
-- [x] Display readability score
-- [x] Display keyword density analysis
-- [x] Build section-by-section feedback UI (Summary, Experience, Education, Skills)
-- [x] Display skill gap analysis with comparisons
-- [x] Show job role matching suggestions
-- [x] Implement analysis result caching
+## Phase 2: ML Model Development
 
-### Phase 6: Frontend - AI Chatbot
-- [x] Build chat interface with message history
-- [x] Implement message input and send functionality
-- [x] Add markdown rendering for LLM responses
-- [x] Implement streaming responses
-- [x] Add resume context indicator
-- [x] Build conversation history persistence
+### Skill Extraction Model
+- [ ] Install spaCy and download pre-trained models
+- [ ] Create training data for NER
+- [ ] Train custom NER model on resume skills
+- [ ] Test and evaluate model accuracy
+- [ ] Save trained model
 
-### Phase 7: Frontend - Resume History Dashboard
-- [x] Create resume list with metadata display
-- [x] Build resume timeline view
-- [x] Implement resume selection and viewing
-- [x] Add delete resume functionality
-- [x] Display analysis history per resume
-- [x] Implement search and filtering
+### Resume Feedback Model
+- [ ] Create training dataset with resume feedback
+- [ ] Train text classification model (sklearn)
+- [ ] Generate feedback templates for each class
+- [ ] Integrate with backend
+- [ ] Test feedback generation
 
-### Phase 8: Frontend - Cover Letter & LinkedIn
-- [x] Build cover letter generator interface
-- [x] Implement job description input field
-- [x] Display generated cover letter with copy/download
-- [x] Build LinkedIn optimization interface
-- [x] Display headline suggestions
-- [x] Display summary suggestions
-- [x] Display skills section suggestions
-- [x] Implement copy-to-clipboard functionality
-- [x] Backend endpoints created for all generation features
+### Chatbot Intent Model
+- [ ] Create Q&A dataset for resume-related questions
+- [ ] Train intent classification model (sklearn)
+- [ ] Create response templates for each intent
+- [ ] Implement fallback responses
+- [ ] Test chatbot interactions
 
-### Phase 9: Frontend - Report Download
-- [x] Build report generation UI
-- [x] Implement PDF report download
-- [x] Include all scores in report
-- [x] Include skill gaps in report
-- [x] Include recommendations in report
-- [x] Test report generation and download
+### Section Classification Model
+- [ ] Create labeled dataset for resume sections
+- [ ] Train text classification model
+- [ ] Test section detection accuracy
+- [ ] Integrate with resume parser
 
-### Phase 10: Polish & Optimization
-- [x] Apply cyberpunk glow effects throughout
-- [x] Optimize animations for performance
-- [x] Implement error handling and user feedback
-- [x] Add loading skeletons
-- [x] Test responsive design on mobile
-- [x] Optimize LLM response times
-- [x] Add rate limiting for API calls
+## Phase 3: Backend Integration
 
-### Phase 11: Testing & Quality Assurance
-- [x] Test resume upload with various file types
-- [x] Test AI scoring accuracy
-- [x] Test chatbot with different queries
-- [x] Test cover letter generation
-- [x] Test LinkedIn optimization
-- [x] Test report download
-- [x] Test user authentication flow
-- [x] Test resume history persistence
-- [x] Cross-browser testing
+### Install ML Dependencies
+- [ ] Add scikit-learn to dependencies
+- [ ] Add spaCy to dependencies
+- [ ] Add numpy and pandas
+- [ ] Add joblib for model serialization
 
-### Phase 12: Final Delivery
-- [x] Create checkpoint
-- [x] Document code with comments
-- [x] Prepare project summary
-- [x] Test full end-to-end workflow
+### Create ML Service Layer
+- [ ] Create `/server/ml/skillExtractor.ts` - Load and use NER model
+- [ ] Create `/server/ml/feedbackGenerator.ts` - Generate feedback
+- [ ] Create `/server/ml/chatbotIntent.ts` - Classify intents
+- [ ] Create `/server/ml/sectionClassifier.ts` - Classify sections
 
-## Feature Checklist
+### Model Loading
+- [ ] Load all models on server startup
+- [ ] Handle model loading errors gracefully
+- [ ] Cache models in memory for performance
 
-1. [x] Resume upload (PDF/DOCX with storage)
-2. [x] AI-powered resume scoring (ATS, readability, keywords)
-3. [x] Skill gap analysis
-4. [x] AI chatbot with resume context
-5. [x] Section-by-section feedback
-6. [x] Resume history dashboard
-7. [x] Job role matching
-8. [x] Downloadable analysis report
-9. [x] User authentication & history
-10. [x] Cyberpunk dark-themed dashboard
-11. [x] AI-generated cover letters
-12. [x] LinkedIn optimization suggestions
+## Phase 4: Replace API Calls
+
+### Resume Analysis Endpoint
+- [ ] Replace LLM call with ML models
+- [ ] Use skill extractor for skills
+- [ ] Use feedback generator for suggestions
+- [ ] Use section classifier for section analysis
+- [ ] Return same response format
+
+### Chatbot Endpoint
+- [ ] Replace LLM call with intent classifier
+- [ ] Use trained intent model
+- [ ] Generate responses from templates
+- [ ] Maintain conversation history
+
+### Cover Letter Generation
+- [ ] Replace LLM with template-based generation
+- [ ] Use extracted skills and experience
+- [ ] Generate professional cover letter
+- [ ] Allow customization
+
+### LinkedIn Suggestions
+- [ ] Replace LLM with rule-based suggestions
+- [ ] Use extracted skills and experience
+- [ ] Generate headline, summary, skills suggestions
+- [ ] Return formatted suggestions
+
+## Phase 5: Testing & Optimization
+
+### Unit Tests
+- [ ] Test skill extraction accuracy
+- [ ] Test feedback generation
+- [ ] Test intent classification
+- [ ] Test section classification
+
+### Integration Tests
+- [ ] Test resume upload with ML analysis
+- [ ] Test chatbot with various questions
+- [ ] Test cover letter generation
+- [ ] Test LinkedIn suggestions
+
+### Performance Tests
+- [ ] Measure model inference time
+- [ ] Optimize slow models
+- [ ] Test with large resumes
+- [ ] Benchmark against requirements
+
+### Accuracy Evaluation
+- [ ] Evaluate skill extraction accuracy
+- [ ] Evaluate feedback quality
+- [ ] Evaluate intent classification accuracy
+- [ ] Document model performance metrics
+
+## Phase 6: Documentation
+
+### ML Model Documentation
+- [ ] Document each model's architecture
+- [ ] Document training process
+- [ ] Document dataset structure
+- [ ] Document model performance metrics
+- [ ] Create ML_MODELS.md file
+
+### Training Scripts
+- [ ] Create training script for each model
+- [ ] Document how to retrain models
+- [ ] Document dataset format
+- [ ] Create data preparation scripts
+
+### API Documentation
+- [ ] Document new ML inference endpoints
+- [ ] Document model loading process
+- [ ] Document error handling
+- [ ] Update JUDGE_SHOWCASE.md
+
+## Phase 7: Final Deployment
+
+### Code Quality
+- [ ] Fix all TypeScript errors
+- [ ] Add error handling for ML predictions
+- [ ] Add logging for debugging
+- [ ] Test all features end-to-end
+
+### Performance Optimization
+- [ ] Optimize model loading
+- [ ] Cache predictions where possible
+- [ ] Minimize inference time
+- [ ] Test under load
+
+### Final Testing
+- [ ] Test resume upload
+- [ ] Test AI analysis
+- [ ] Test chatbot
+- [ ] Test cover letter generation
+- [ ] Test LinkedIn suggestions
+- [ ] Test on different browsers
+- [ ] Test on mobile devices
+
+### Deployment
+- [ ] Save final checkpoint
+- [ ] Push to GitHub
+- [ ] Verify live website works
+- [ ] Create final documentation
+
+---
+
+## Feature Status
+
+| Feature | Status | ML Integration |
+|---------|--------|-----------------|
+| Resume Upload | ✅ Working | No change needed |
+| ATS Scoring | ✅ Working | No change (custom algorithm) |
+| Readability Score | ✅ Working | No change (Flesch-Kincaid) |
+| Keyword Analysis | ✅ Working | No change (custom algorithm) |
+| Skill Extraction | 🔄 Updating | ML NER Model |
+| Resume Feedback | 🔄 Updating | ML Classification Model |
+| Chatbot | 🔄 Updating | ML Intent Classifier |
+| Cover Letter | 🔄 Updating | Template-based (no API) |
+| LinkedIn Suggestions | 🔄 Updating | Rule-based (no API) |
+| Resume History | ✅ Working | No change needed |
+| Job Role Matching | ✅ Working | Use ML extracted skills |
+| Report Download | ✅ Working | No change needed |
+
+---
 
 ## Notes
 
-- All scores and analyses stored per user
-- Chatbot maintains full resume context
-- Cover letter uses resume + job description
-- LinkedIn suggestions target headline, summary, skills
-- Cyberpunk theme: deep black bg, neon pink/cyan text, geometric HUD elements, glow effects
-
-
-## Bug Fixes & Issues
-
-- [x] Fix resume upload analysis - stuck on "analyzing" state - FIXED: Database insert ID retrieval
-- [x] Debug file parsing for PDF/DOCX extraction - FIXED: Switched to pdf2json library
-- [x] Fix LLM API response handling in resume analysis - WORKING
-- [x] Verify database storage of analysis results - VERIFIED
-- [x] Add error handling and user feedback for failed uploads - IMPLEMENTED
-
-## Final Status
-
-✅ **PROJECT COMPLETE AND FULLY FUNCTIONAL**
-- All 12 core features implemented
-- PDF/DOCX upload working
-- AI analysis generating results
-- Cyberpunk UI fully styled
-- Database integration complete
-- Ready for production deployment
+- All ML models will be trained locally and saved as files
+- No external APIs will be used (meeting project requirements)
+- Models will be loaded on server startup
+- Inference will be fast (<1 second per prediction)
+- All models will have documented training procedures
+- Dataset will be included in repository for reproducibility

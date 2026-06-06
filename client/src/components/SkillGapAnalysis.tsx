@@ -12,13 +12,13 @@ export function SkillGapAnalysis({ resumeId }: SkillGapAnalysisProps) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
 
-  const analyzeMutation = trpc.resume.analyzeJobMatch.useMutation({
-    onSuccess: (data) => {
+  const analyzeMutation = trpc.chatbot.analyzeSkillGaps.useMutation({
+    onSuccess: (data: any) => {
       setResult(data);
       setLoading(false);
       toast.success("Analysis complete!");
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast.error(error.message || "Failed to analyze job match");
       setLoading(false);
     },
@@ -115,14 +115,14 @@ export function SkillGapAnalysis({ resumeId }: SkillGapAnalysisProps) {
           </div>
 
           {/* Matched Skills */}
-          {result.skillMatches && result.skillMatches.length > 0 && (
+          {(result.matchingSkills || result.skillMatches) && (result.matchingSkills || result.skillMatches || []).length > 0 && (
             <div className="glow-box p-6 rounded-sm">
               <div className="flex items-center gap-2 mb-4">
                 <TrendingUp size={20} className="text-primary neon-glow" />
                 <h3 className="text-lg font-bold text-foreground">Matched Skills</h3>
               </div>
               <div className="flex flex-wrap gap-2">
-                {result.skillMatches.map((skill: string, idx: number) => (
+                {(result.matchingSkills || result.skillMatches || []).map((skill: string, idx: number) => (
                   <span
                     key={idx}
                     className="text-sm bg-primary text-primary-foreground px-3 py-1 rounded-sm neon-glow"
@@ -138,13 +138,13 @@ export function SkillGapAnalysis({ resumeId }: SkillGapAnalysisProps) {
           )}
 
           {/* Skill Gaps */}
-          {result.skillGaps && result.skillGaps.length > 0 && (
+          {(result.missingSkills || result.skillGaps) && (result.missingSkills || result.skillGaps || []).length > 0 && (
             <div className="glow-box-cyan p-6 rounded-sm">
               <h3 className="text-lg font-bold text-secondary neon-glow-cyan mb-4">
                 Skills to Develop
               </h3>
               <div className="flex flex-wrap gap-2">
-                {result.skillGaps.map((skill: string, idx: number) => (
+                {(result.missingSkills || result.skillGaps || []).map((skill: string, idx: number) => (
                   <span
                     key={idx}
                     className="text-sm bg-secondary text-secondary-foreground px-3 py-1 rounded-sm"

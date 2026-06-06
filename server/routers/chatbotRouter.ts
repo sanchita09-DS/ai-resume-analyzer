@@ -7,7 +7,9 @@ import { protectedProcedure, router } from "../_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { getResumeById } from "../db.resumes";
 import { addChatMessage, getChatHistory } from "../db.resumes";
-import { invokeLLM } from "../_core/llm";
+// ML Models (replacing LLM API)
+import * as chatbotIntent from "../ml/chatbotIntent";
+import * as skillExtractor from "../ml/skillExtractor";
 
 export const chatbotRouter = router({
   /**
@@ -81,14 +83,17 @@ Be conversational, encouraging, and specific. Reference actual content from thei
           content: input.message,
         });
 
-        // Get AI response
-        const response = await invokeLLM({
-          messages,
+        // Get AI response using trained ML models (NO API CALLS)
+        const intentMatch = chatbotIntent.classifyIntent(input.message);
+        const resumeSkills = resume.skillsExtracted ? JSON.parse(resume.skillsExtracted) : [];
+        
+        const mlResponse = chatbotIntent.generateResponse(intentMatch.intent, {
+          skills: resumeSkills,
+          experience: resume.extractedText || '',
+          education: resume.extractedText || '',
         });
-
-        const assistantMessage = typeof response.choices[0]?.message?.content === 'string'
-          ? response.choices[0]?.message?.content
-          : JSON.stringify(response.choices[0]?.message?.content);
+        
+        const assistantMessage = mlResponse.response;
 
         // Save assistant message
         await addChatMessage(input.resumeId, ctx.user.id, "assistant", assistantMessage);
@@ -134,6 +139,59 @@ Be conversational, encouraging, and specific. Reference actual content from thei
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to fetch chat history",
+        });
+      }
+    }),
+
+  /**
+   * Analyze skill gaps against job description
+   */
+  analyzeSkillGaps: protectedProcedure
+    .input(
+      z.object({
+        resumeId: z.number(),
+        jobDescription: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const resume = await getResumeById(input.resumeId);
+        if (!resume || resume.userId !== ctx.user.id) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Resume not found",
+          });
+        }
+
+        // Extract skills from both resume and job description
+        const resumeSkills = resume.skillsExtracted ? JSON.parse(resume.skillsExtracted) : [];
+        const jobSkills = skillExtractor.extractSkills(input.jobDescription);
+
+        // Find skill gaps
+        const resumeSkillsLower = resumeSkills.map((s: string) => s.toLowerCase());
+        const missingSkills = jobSkills.skills.filter(
+          skill => !resumeSkillsLower.includes(skill.toLowerCase())
+        );
+
+        const matchingSkills = jobSkills.skills.filter(
+          skill => resumeSkillsLower.includes(skill.toLowerCase())
+        );
+
+        // Score the match
+        const matchPercentage = Math.round((matchingSkills.length / Math.max(1, jobSkills.skills.length)) * 100);
+
+        return {
+          success: true,
+          matchPercentage,
+          matchingSkills,
+          missingSkills,
+          recommendations: skillExtractor.recommendSkills(resumeSkills),
+        };
+      } catch (error) {
+        console.error("Failed to analyze skill gaps:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error instanceof Error ? error.message : "Failed to analyze skill gaps",
         });
       }
     }),

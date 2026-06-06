@@ -1,5 +1,5 @@
 /**
- * Resume upload and analysis router
+ * Resume upload and analysis router - Using trained ML models instead of APIs
  */
 
 import { z } from "zod";
@@ -17,11 +17,14 @@ import {
   getOrCreateAnalysis,
   updateAnalysis,
 } from "../db.resumes";
-import { invokeLLM } from "../_core/llm";
+
+// ML Models (no API calls)
+import * as feedbackGenerator from "../ml/feedbackGenerator";
+import * as sectionClassifier from "../ml/sectionClassifier";
 
 export const resumeRouter = router({
   /**
-   * Upload and analyze a resume
+   * Upload and analyze a resume using trained ML models
    */
   upload: protectedProcedure
     .input(
@@ -84,49 +87,35 @@ export const resumeRouter = router({
         // Create analysis record
         const analysis = await getOrCreateAnalysis(resume.id, ctx.user.id);
 
-        // Generate AI feedback for each section
-        const feedbackPrompt = `You are an expert resume reviewer. Analyze this resume and provide specific, actionable feedback.
-
-Resume Text:
-${normalizedText}
-
-Please provide feedback in JSON format with these keys:
-- summaryFeedback: Feedback on the summary/objective section
-- experienceFeedback: Feedback on the experience section
-- educationFeedback: Feedback on the education section
-- skillsFeedback: Feedback on the skills section
-- overallFeedback: General improvement suggestions
-
-Keep each feedback concise (2-3 sentences) and actionable.`;
-
-        const feedbackResponse = await invokeLLM({
-          messages: [
-            {
-              role: "system",
-              content: "You are a professional resume reviewer. Provide feedback in valid JSON format only.",
-            },
-            {
-              role: "user",
-              content: feedbackPrompt,
-            },
-          ],
-        });
-
-        let feedback: any = {};
-        try {
-          const content = feedbackResponse.choices[0]?.message?.content;
-          const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
-          feedback = JSON.parse(contentStr);
-        } catch (e) {
-          console.error("Failed to parse AI feedback:", e);
-          feedback = {
-            summaryFeedback: "Review your summary for clarity and impact.",
-            experienceFeedback: "Highlight quantifiable achievements in your experience.",
-            educationFeedback: "Include relevant certifications and coursework.",
-            skillsFeedback: "Prioritize skills relevant to your target role.",
-            overallFeedback: "Consider tailoring your resume for specific job descriptions.",
-          };
-        }
+        // Generate feedback using trained ML models (NO API CALLS)
+        console.log("[Resume Upload] Generating ML-based feedback...");
+        
+        // Classify resume sections using ML
+        const summarySection = sectionClassifier.extractSection(normalizedText, 'summary')?.content || '';
+        const experienceSection = sectionClassifier.extractSection(normalizedText, 'experience')?.content || '';
+        const educationSection = sectionClassifier.extractSection(normalizedText, 'education')?.content || '';
+        const skillsSection = sectionClassifier.extractSection(normalizedText, 'skills')?.content || '';
+        
+        // Generate feedback using trained ML models
+        const summaryAnalysis = feedbackGenerator.analyzeSummary(summarySection);
+        const experienceAnalysis = feedbackGenerator.analyzeExperience(experienceSection);
+        const educationAnalysis = feedbackGenerator.analyzeEducation(educationSection);
+        const skillsAnalysis = feedbackGenerator.analyzeSkills(skillsSection);
+        
+        const overallAnalysis = feedbackGenerator.generateOverallFeedback(
+          summaryAnalysis,
+          experienceAnalysis,
+          educationAnalysis,
+          skillsAnalysis
+        );
+        
+        const feedback = {
+          summaryFeedback: summaryAnalysis.suggestions.join(' ') || 'Review your summary for clarity and impact.',
+          experienceFeedback: experienceAnalysis.suggestions.join(' ') || 'Highlight quantifiable achievements in your experience.',
+          educationFeedback: educationAnalysis.suggestions.join(' ') || 'Include relevant certifications and coursework.',
+          skillsFeedback: skillsAnalysis.suggestions.join(' ') || 'Prioritize skills relevant to your target role.',
+          overallFeedback: overallAnalysis.topPriorities.join(' ') || 'Consider tailoring your resume for specific job descriptions.',
+        };
 
         // Update analysis with feedback
         if (analysis) {
@@ -162,23 +151,13 @@ Keep each feedback concise (2-3 sentences) and actionable.`;
     }),
 
   /**
-   * Get all resumes for the current user
+   * Get user's resumes
    */
   list: protectedProcedure.query(async ({ ctx }) => {
     try {
-      const userResumes = await getUserResumes(ctx.user.id);
-      return userResumes.map((resume) => ({
-        id: resume.id,
-        fileName: resume.fileName,
-        fileType: resume.fileType,
-        atsScore: resume.atsScore,
-        readabilityScore: resume.readabilityScore,
-        skills: resume.skillsExtracted ? JSON.parse(resume.skillsExtracted) : [],
-        jobRoles: resume.jobRoleMatches ? JSON.parse(resume.jobRoleMatches) : [],
-        createdAt: resume.createdAt,
-      }));
+      const resumes = await getUserResumes(ctx.user.id);
+      return resumes;
     } catch (error) {
-      console.error("Failed to list resumes:", error);
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: "Failed to fetch resumes",
@@ -187,173 +166,48 @@ Keep each feedback concise (2-3 sentences) and actionable.`;
   }),
 
   /**
-   * Get resume details with analysis
+   * Get specific resume with analysis
    */
-  getDetails: protectedProcedure
+  getById: protectedProcedure
     .input(z.object({ resumeId: z.number() }))
     .query(async ({ ctx, input }) => {
       try {
         const resume = await getResumeById(input.resumeId);
-
         if (!resume || resume.userId !== ctx.user.id) {
           throw new TRPCError({
             code: "NOT_FOUND",
             message: "Resume not found",
           });
         }
-
-        return {
-          id: resume.id,
-          fileName: resume.fileName,
-          fileType: resume.fileType,
-          fileUrl: resume.fileUrl,
-          extractedText: resume.extractedText,
-          atsScore: resume.atsScore,
-          readabilityScore: resume.readabilityScore,
-          keywordDensity: resume.keywordDensity ? JSON.parse(resume.keywordDensity) : {},
-          skills: resume.skillsExtracted ? JSON.parse(resume.skillsExtracted) : [],
-          jobRoles: resume.jobRoleMatches ? JSON.parse(resume.jobRoleMatches) : [],
-          createdAt: resume.createdAt,
-        };
+        return resume;
       } catch (error) {
-        console.error("Failed to get resume details:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch resume details",
+          message: "Failed to fetch resume",
         });
       }
     }),
 
   /**
-   * Delete a resume
+   * Delete resume
    */
   delete: protectedProcedure
     .input(z.object({ resumeId: z.number() }))
     .mutation(async ({ ctx, input }) => {
       try {
         const resume = await getResumeById(input.resumeId);
-
         if (!resume || resume.userId !== ctx.user.id) {
           throw new TRPCError({
             code: "NOT_FOUND",
             message: "Resume not found",
           });
         }
-
         await deleteResume(input.resumeId);
-
         return { success: true };
       } catch (error) {
-        console.error("Failed to delete resume:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to delete resume",
-        });
-      }
-    }),
-
-  /**
-   * Analyze resume against job description
-   */
-  analyzeJobMatch: protectedProcedure
-    .input(
-      z.object({
-        resumeId: z.number(),
-        jobDescription: z.string(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      try {
-        const resume = await getResumeById(input.resumeId);
-
-        if (!resume || resume.userId !== ctx.user.id) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Resume not found",
-          });
-        }
-
-        // Extract skills from job description
-        const jobSkills = extractSkills(input.jobDescription);
-        const resumeSkills = resume.skillsExtracted ? JSON.parse(resume.skillsExtracted) : [];
-
-        // Find matching and missing skills
-        const skillMatches = resumeSkills.filter((skill: string) =>
-          jobSkills.some((js: string) => js.toLowerCase() === skill.toLowerCase())
-        );
-        const skillGaps = jobSkills.filter(
-          (skill: string) =>
-            !resumeSkills.some((rs: string) => rs.toLowerCase() === skill.toLowerCase())
-        );
-
-        // Generate AI analysis
-        const analysisPrompt = `Compare this resume against the job description and provide a skill gap analysis.
-
-Resume Skills: ${resumeSkills.join(", ")}
-
-Job Description:
-${input.jobDescription}
-
-Required Skills: ${jobSkills.join(", ")}
-
-Provide a JSON response with:
-- matchPercentage: (0-100) how well the resume matches the job
-- skillMatches: array of matched skills
-- skillGaps: array of missing skills
-- recommendations: array of 3-4 recommendations to improve fit`;
-
-        const analysisResponse = await invokeLLM({
-          messages: [
-            {
-              role: "system",
-              content: "You are a career coach analyzing job fit. Respond with valid JSON only.",
-            },
-            {
-              role: "user",
-              content: analysisPrompt,
-            },
-          ],
-        });
-
-        let analysis: any = {};
-        try {
-          const content = analysisResponse.choices[0]?.message?.content;
-          const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
-          analysis = JSON.parse(contentStr);
-        } catch (e) {
-          analysis = {
-            matchPercentage: 60,
-            skillMatches,
-            skillGaps,
-            recommendations: [
-              "Learn the missing technical skills",
-              "Highlight transferable skills",
-              "Gain relevant project experience",
-            ],
-          };
-        }
-
-        // Update analysis record
-        const analysisRecord = await getOrCreateAnalysis(resume.id, ctx.user.id);
-        if (analysisRecord) {
-          await updateAnalysis(analysisRecord.id, {
-            targetJobDescription: input.jobDescription,
-            skillMatches: JSON.stringify(analysis.skillMatches || skillMatches),
-            skillGaps: JSON.stringify(analysis.skillGaps || skillGaps),
-          });
-        }
-
-        return {
-          matchPercentage: analysis.matchPercentage || 60,
-          skillMatches: analysis.skillMatches || skillMatches,
-          skillGaps: analysis.skillGaps || skillGaps,
-          recommendations: analysis.recommendations || [],
-        };
-      } catch (error) {
-        console.error("Failed to analyze job match:", error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to analyze job match",
         });
       }
     }),

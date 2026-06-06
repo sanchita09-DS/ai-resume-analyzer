@@ -107,11 +107,11 @@ export function ResumeHistory({ onSelectResume }: ResumeHistoryProps) {
               </div>
 
               {/* Skills */}
-              {selectedResume.skills.length > 0 && (
+              {(selectedResume.skillsExtracted ? JSON.parse(selectedResume.skillsExtracted) : []).length > 0 && (
                 <div>
                   <h3 className="font-semibold text-foreground mb-2">Extracted Skills</h3>
                   <div className="flex flex-wrap gap-2">
-                    {selectedResume.skills.slice(0, 8).map((skill: string, idx: number) => (
+                    {(selectedResume.skillsExtracted ? JSON.parse(selectedResume.skillsExtracted) : []).slice(0, 8).map((skill: string, idx: number) => (
                       <span
                         key={idx}
                         className="text-xs bg-primary text-primary-foreground px-3 py-1 rounded-sm neon-glow"
@@ -119,9 +119,9 @@ export function ResumeHistory({ onSelectResume }: ResumeHistoryProps) {
                         {skill}
                       </span>
                     ))}
-                    {selectedResume.skills.length > 8 && (
+                    {(selectedResume.skillsExtracted ? JSON.parse(selectedResume.skillsExtracted) : []).length > 8 && (
                       <span className="text-xs text-muted-foreground px-3 py-1">
-                        +{selectedResume.skills.length - 8} more
+                        +{(selectedResume.skillsExtracted ? JSON.parse(selectedResume.skillsExtracted) : []).length - 8} more
                       </span>
                     )}
                   </div>
@@ -142,11 +142,11 @@ export function ResumeHistory({ onSelectResume }: ResumeHistoryProps) {
             />
 
             {/* Job Roles */}
-            {selectedResume.jobRoles.length > 0 && (
+            {(selectedResume.jobRoleMatches ? JSON.parse(selectedResume.jobRoleMatches) : []).length > 0 && (
               <div className="glow-box-cyan p-6 rounded-sm">
                 <h3 className="font-semibold text-foreground mb-3">Suggested Job Roles</h3>
                 <div className="space-y-2">
-                  {selectedResume.jobRoles.map((role: string, idx: number) => (
+                  {(selectedResume.jobRoleMatches ? JSON.parse(selectedResume.jobRoleMatches) : []).map((role: string, idx: number) => (
                     <div key={idx} className="flex items-center gap-2 text-foreground">
                       <span className="text-secondary">▸</span>
                       <span>{role}</span>
