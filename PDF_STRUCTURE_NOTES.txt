@@ -1,0 +1,42 @@
+ORIGINAL JUDGE PDF STRUCTURE (10 pages):
+
+Page 1: Project at a Glance
+- Project Name, Subject, Live URL, GitHub, Type, Development Time
+- 12 Core Features list
+
+Page 2: Technology Stack Summary
+- Frontend: React 19, TypeScript, Tailwind CSS 4, tRPC, Framer Motion
+- Backend: Express.js, Node.js, tRPC, Drizzle ORM
+- Database & Storage: MySQL, Amazon S3, Drizzle ORM
+- AI & External Services: Manus LLM API, OAuth 2.0, pdf2json, Mammoth
+
+Page 3: Design Highlights + Key UI Components
+- Cyberpunk Aesthetic
+- Design details and UI components
+
+Page 4: How It Works (Technical Flow)
+- Upload & Analysis Pipeline (10 steps)
+- AI Integration Points
+
+Page 5: Scoring Algorithms + Security & Authentication
+- ATS Compatibility Score
+- Readability Score
+- Keyword Density
+- Security & Authentication table
+
+Page 6: Database Schema + Demo Sequence
+- 5 Tables structure
+- Demo Sequence (Recommended) - 3 sections
+
+CHANGES NEEDED FOR ML VERSION:
+1. Update "AI & External Services" to replace "Manus LLM API" with "4 Trained ML Models"
+2. Add new section "ML Models Architecture" explaining:
+   - Skill Extractor (NER-based)
+   - Feedback Generator (Template + ML)
+   - Section Classifier (Text Classification)
+   - Intent Classifier (Chatbot Intent)
+3. Update "How It Works" pipeline to show ML model inference instead of LLM API calls
+4. Add "ML Model Training" section explaining datasets and training approach
+5. Update "AI Integration Points" to show ML model usage
+6. Add "Zero API Dependency" highlight
+7. Update demo sequence to show ML model outputs
